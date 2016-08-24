@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
   interactive_markers 
   geometry_msgs
+  trajectory_msgs
   giskard_msgs
   kdl_conversions)
 
@@ -77,3 +78,7 @@ add_dependencies(goal_marker_viz ${catkin_EXPORTED_TARGETS})
 add_executable(joint_state_pretty_printer src/${PROJECT_NAME}/joint_state_pretty_printer.cpp)
 target_link_libraries(joint_state_pretty_printer ${catkin_LIBRARIES})
 add_dependencies(joint_state_pretty_printer ${catkin_EXPORTED_TARGETS})
+
+add_executable(pr2_interface_node src/${PROJECT_NAME}/pr2_interface_node.cpp)
+target_link_libraries(pr2_interface_node ${catkin_LIBRARIES})
+add_dependencies(pr2_interface_node ${catkin_EXPORTED_TARGETS})

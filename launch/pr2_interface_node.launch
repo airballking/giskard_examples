@@ -1,0 +1,9 @@
+<launch>
+
+  <node pkg="giskard_examples" type="pr2_interface_node" name="pr2_interface_node"
+        output="screen" >
+    <remap from="~joint_states" to="/joint_states" />
+    <remap from="~right_arm_command" to="/r_arm_controller/command" />
+  </node>
+
+</launch>
