@@ -33,14 +33,14 @@
     </node>
   </group>
 
-  <node pkg="giskard_examples" type="float_array_separator" name="velocity_cmd_separator" output="screen" if="($arg sim)" >
+  <node pkg="giskard_examples" type="float_array_separator" name="velocity_cmd_separator" output="screen" if="$(arg sim)" >
     <rosparam param="joint_names"
       file="$(find giskard_examples)/config/pr2_upper_body.yaml" />
     <remap from="~input_array" to="/whole_body_controller/velocity_cmd" />
   </node>
 
   <node pkg="giskard_examples" type="pr2_interface_node" name="pr2_interface_right_arm"
-        output="screen" unless="($arg sim)" >
+        output="screen" unless="$(arg sim)" >
     <remap from="~joint_states" to="/joint_states" />
     <remap from="~position_cmd" to="/r_arm_controller/command" />
     <remap from="~velocity_cmd" to="/whole_body_controller/velocity_cmd" />
@@ -49,7 +49,7 @@
   </node>
 
   <node pkg="giskard_examples" type="pr2_interface_node" name="pr2_interface_left_arm"
-        output="screen" unless="($arg sim)" >
+        output="screen" unless="$(arg sim)" >
     <remap from="~joint_states" to="/joint_states" />
     <remap from="~position_cmd" to="/l_arm_controller/command" />
     <remap from="~velocity_cmd" to="/whole_body_controller/velocity_cmd" />
