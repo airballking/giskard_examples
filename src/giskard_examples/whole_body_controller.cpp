@@ -192,7 +192,7 @@ namespace giskard_examples
         nh_(nh), state_(WholeBodyControllerState::constructed) {}
       WholeBodyController::~WholeBodyController() {}
 
-      void WholeBodyController::start(const WholeBodyControllerParams& params)
+      void WholeBodyController::init(const WholeBodyControllerParams& params)
       {
         ROS_DEBUG("Calling start.");
         if (state_ == WholeBodyControllerState::constructed)
@@ -213,9 +213,9 @@ namespace giskard_examples
       void WholeBodyController::joint_state_callback(const sensor_msgs::JointState::ConstPtr& msg)
       {
         if (state_ == WholeBodyControllerState::started)
-          process_first_joint_state(*msg);
+          start(*msg);
 
-        process_regular_joint_state(*msg);
+        update(*msg);
 
         last_joint_state_ = *msg;
       }
@@ -226,7 +226,12 @@ namespace giskard_examples
           giskard_examples::calculateHash<giskard_msgs::WholeBodyCommand>(*msg);
       
         if(get_current_context().get_feedback().current_command_hash != new_command_hash)
-          process_new_command(*msg);
+          set_command(*msg);
+      }
+
+      const WholeBodyControllerState& WholeBodyController::state() const
+      {
+        return state_;
       }
 
       // INTERNAL HELPER FUNCTIONS
@@ -303,7 +308,7 @@ namespace giskard_examples
         }
       }
 
-      void WholeBodyController::process_new_command(const giskard_msgs::WholeBodyCommand& msg)
+      void WholeBodyController::set_command(const giskard_msgs::WholeBodyCommand& msg)
       {
         giskard_msgs::WholeBodyCommand new_command = 
           complete_command(msg, get_current_context().get_command());
@@ -351,8 +356,11 @@ namespace giskard_examples
         }
       }
 
-      void WholeBodyController::process_first_joint_state(const sensor_msgs::JointState& msg)
+      void WholeBodyController::start(const sensor_msgs::JointState& msg)
       {
+        if (WholeBodyControllerState::started != state())
+          throw std::runtime_error("Tried to start controller in non-started state.");
+
         contexts_.at("joint_joint").start_controller( 
             init_joint_joint_command(msg, parameters_), 
             parameters_, msg, "joint_joint");
@@ -371,7 +379,7 @@ namespace giskard_examples
         goal_sub_ = nh_.subscribe("goal", 1, &WholeBodyController::command_callback, this);
       }
 
-      void WholeBodyController::process_regular_joint_state(const sensor_msgs::JointState& msg)
+      void WholeBodyController::update(const sensor_msgs::JointState& msg)
       {
         ControllerContext& context = get_current_context();
         if (context.update(msg, parameters_.nWSR))

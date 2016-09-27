@@ -61,7 +61,7 @@ int main(int argc, char **argv)
   WholeBodyController wbc(nh);
   try
   {
-    wbc.start(read_params(nh));
+    wbc.init(read_params(nh));
     ros::spin();
   }
   catch (const std::exception& e)

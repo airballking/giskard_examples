@@ -81,11 +81,21 @@ namespace giskard_examples
       WholeBodyController(const ros::NodeHandle& nh); 
       ~WholeBodyController();
 
-      void start(const WholeBodyControllerParams& params);
+      // TODO: think about joining init & start
+      void init(const WholeBodyControllerParams& params);
 
+      void start(const sensor_msgs::JointState& msg);
+
+      void update(const sensor_msgs::JointState& msg);
+
+      void set_command(const giskard_msgs::WholeBodyCommand& msg);
+
+      // TODO: get rid of these callbacks
       void joint_state_callback(const sensor_msgs::JointState::ConstPtr& msg);
 
       void command_callback(const giskard_msgs::WholeBodyCommand::ConstPtr& msg);
+
+      const WholeBodyControllerState& state() const;
 
     private:
       // TODO: separate into two classes to allow unit testing
@@ -111,15 +121,10 @@ namespace giskard_examples
 
       std::string infer_controller(const giskard_msgs::WholeBodyCommand& msg);
 
-      void process_new_command(const giskard_msgs::WholeBodyCommand& msg);
 
       void init_and_start_yaml_controller(const giskard_msgs::WholeBodyCommand& msg);
 
       void init_controller_contexts();
-
-      void process_first_joint_state(const sensor_msgs::JointState& msg);
-
-      void process_regular_joint_state(const sensor_msgs::JointState& msg);
 
       KDL::Frame eval_fk(const std::string& fk_name, const sensor_msgs::JointState& msg);
   };
