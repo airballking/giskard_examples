@@ -39,6 +39,7 @@ namespace giskard_examples
     public:
       std::string frame_id, l_fk_name, r_fk_name;
       std::vector< std::string > joint_names, l_arm_names, r_arm_names;
+      std::map<std::string, std::string> controller_descriptions;
       std::set< std::string > controller_types;
       int nWSR;
   };
@@ -82,7 +83,11 @@ namespace giskard_examples
       WholeBodyController(const ros::NodeHandle& nh); 
       ~WholeBodyController();
 
-      void start();
+      void start(const WholeBodyControllerParams& params);
+
+      void joint_state_callback(const sensor_msgs::JointState::ConstPtr& msg);
+
+      void command_callback(const giskard_msgs::WholeBodyCommand::ConstPtr& msg);
 
     private:
       // TODO: separate into two classes to allow unit testing
@@ -96,11 +101,6 @@ namespace giskard_examples
       WholeBodyControllerParams parameters_;
       WholeBodyControllerState state_;
       sensor_msgs::JointState last_joint_state_;
-
-      // CALLBACKS
-      void joint_state_callback(const sensor_msgs::JointState::ConstPtr& msg);
-
-      void command_callback(const giskard_msgs::WholeBodyCommand::ConstPtr& msg);
 
       // INTERNAL HELPER FUNCTIONS
       // TODO: check whether these could move somewhere else
@@ -118,11 +118,7 @@ namespace giskard_examples
 
       void init_and_start_yaml_controller(const giskard_msgs::WholeBodyCommand& msg);
 
-      void init_parameters();
-
       void init_controller_contexts();
-
-      std::map<std::string, std::string> read_controller_descriptions();
 
       void process_first_joint_state(const sensor_msgs::JointState& msg);
 

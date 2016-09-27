@@ -2,6 +2,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <giskard_msgs/WholeBodyAction.h>
 #include <giskard_examples/ros_utils.hpp>
+#include <giskard_examples/conversions.hpp>
 
 giskard_msgs::ArmCommand make_cartesian_command(const std::vector<double>& pose,
     const std::map< std::string, double>& thresholds)

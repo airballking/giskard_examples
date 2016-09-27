@@ -18,17 +18,14 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-
-#ifndef __GISKARD_ROS_UTILS_HPP__
-#define __GISKARD_ROS_UTILS_HPP__
+#ifndef __GISKARD_EXAMPLES_ROS_UTILS_HPP__
+#define __GISKARD_EXAMPLES_ROS_UTILS_HPP__
 
 #include <iostream>
 #include <fstream>
 #include <exception>
 #include <ros/ros.h>
 #include <ros/package.h>
-#include <geometry_msgs/Pose.h>
-#include <giskard_msgs/SemanticFloat64.h>
 
 namespace giskard_examples
 {
@@ -72,34 +69,6 @@ namespace giskard_examples
       result.push_back(read_file(package_path + "/" + filenames[i]));
     return result;
   }
-
-  inline std::vector<giskard_msgs::SemanticFloat64> to_msg(
-      const std::map<std::string, double> map)
-  {
-    std::vector<giskard_msgs::SemanticFloat64> result;
-    for (std::map<std::string, double>::const_iterator it=map.begin();
-         it!=map.end(); ++it)
-    {
-      giskard_msgs::SemanticFloat64 msg;
-      msg.semantics = it->first;
-      msg.value = it->second;
-      result.push_back(msg);
-    }
-    return result;
-  }
-  
-  inline geometry_msgs::Pose make_pose(const std::vector<double>& values)
-  {
-    geometry_msgs::Pose msg;
-    msg.position.x = values[0];
-    msg.position.y = values[1];
-    msg.position.z = values[2];
-    msg.orientation.x = values[3];
-    msg.orientation.y = values[4];
-    msg.orientation.z = values[5];
-    msg.orientation.w = values[6];
-    return msg;
-  }
 }
 
-#endif // __GISKARD_ROS_UTILS__HPP
+#endif // __GISKARD_EXAMPLES_ROS_UTILS__HPP

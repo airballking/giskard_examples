@@ -23,15 +23,10 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <ros/console.h>
-#include <sensor_msgs/JointState.h>
-#include <giskard_msgs/WholeBodyCommand.h>
-#include <giskard_msgs/ControllerFeedback.h>
-#include <giskard_msgs/SemanticFloat64Array.h>
 #include <yaml-cpp/yaml.h>
 #include <giskard/giskard.hpp>
-#include <kdl_conversions/kdl_msg.h>
 #include <boost/lexical_cast.hpp>
-#include <giskard_examples/ros_utils.hpp>
+#include <giskard_examples/ros_utils.hpp> // TODO: remove this, after watchdogs are out
 #include <giskard_examples/utils.hpp>
 #include <giskard_examples/watchdog.hpp>
 
@@ -199,12 +194,13 @@ namespace giskard_examples
         nh_(nh), state_(WholeBodyControllerState::constructed) {}
       WholeBodyController::~WholeBodyController() {}
 
-      void WholeBodyController::start()
+      void WholeBodyController::start(const WholeBodyControllerParams& params)
       {
         ROS_DEBUG("Calling start.");
         if (state_ == WholeBodyControllerState::constructed)
         {
-          init_parameters();
+          parameters_ = params;
+//          init_parameters();
           watchdog_.setPeriod(ros::Duration(readParam<double>(nh_, "watchdog_period")));
           init_controller_contexts();
   
@@ -344,31 +340,14 @@ namespace giskard_examples
         get_current_context().start_controller(msg, parameters_, last_joint_state_, "yaml");
       }
 
-      void WholeBodyController::init_parameters()
-      {
-        parameters_.nWSR = readParam<int>(nh_, "nWSR");
-        // TODO: extract joint_names from controller description
-        parameters_.joint_names = readParam< std::vector<std::string> >(nh_, "joint_names");
-        // TODO: harmonize with bodypart notation from other nodes?
-        parameters_.l_arm_names = readParam< std::vector<std::string> >(nh_, "l_arm_names");
-        parameters_.r_arm_names = readParam< std::vector<std::string> >(nh_, "r_arm_names");
-        parameters_.frame_id = readParam< std::string >(nh_, "frame_id");
-        parameters_.l_fk_name = readParam< std::string >(nh_, "l_fk_name");
-        parameters_.r_fk_name = readParam< std::string >(nh_, "r_fk_name");
-        parameters_.controller_types = {"cart_cart", "joint_cart", "cart_joint", "joint_joint", "yaml"};
-      }
-
       void WholeBodyController::init_controller_contexts()
       {
-        std::map<std::string, std::string> controller_descriptions =
-          read_controller_descriptions();
-
         for(std::set<std::string>::const_iterator it=parameters_.controller_types.begin();
             it!=parameters_.controller_types.end(); ++it)
         {
           if (it->compare("yaml") != 0)
           {
-            YAML::Node node = YAML::Load(controller_descriptions.at(*it));
+            YAML::Node node = YAML::Load(parameters_.controller_descriptions.at(*it));
             giskard::QPControllerSpec spec = node.as< giskard::QPControllerSpec >();
             giskard::QPController controller = giskard::generate(spec);
             for (size_t i=0; i<parameters_.joint_names.size(); ++i)
@@ -382,17 +361,6 @@ namespace giskard_examples
             contexts_.insert( std::pair<std::string, ControllerContext>(*it, context));
           }
         }
-      }
-
-      std::map<std::string, std::string> WholeBodyController::read_controller_descriptions()
-      {
-        std::map<std::string, std::string> result = 
-          readParam< std::map<std::string, std::string> >(nh_, "controller_descriptions");
-        for (std::set<std::string>::const_iterator it=parameters_.controller_types.begin();
-             it!=parameters_.controller_types.end(); ++it)
-          if(it->compare("yaml") != 0 && result.find(*it) == result.end())
-            throw std::runtime_error("Could not find controller description for '" + *it + "'.");
-        return result;
       }
 
       void WholeBodyController::process_first_joint_state(const sensor_msgs::JointState& msg)

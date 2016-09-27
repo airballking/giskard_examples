@@ -23,6 +23,7 @@
 #include <interactive_markers/interactive_marker_server.h>
 #include <actionlib/client/simple_action_client.h>
 #include <giskard_examples/ros_utils.hpp>
+#include <giskard_examples/conversions.hpp>
 #include <giskard_msgs/WholeBodyAction.h>
 #include <memory>
 #include <boost/bind.hpp>

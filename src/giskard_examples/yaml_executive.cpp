@@ -23,6 +23,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <yaml-cpp/yaml.h>
 #include <giskard_examples/ros_utils.hpp>
+#include <giskard_examples/conversions.hpp>
 #include <giskard_msgs/WholeBodyAction.h>
 
 namespace giskard_examples
