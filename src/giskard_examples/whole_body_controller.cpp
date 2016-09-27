@@ -26,9 +26,7 @@
 #include <yaml-cpp/yaml.h>
 #include <giskard/giskard.hpp>
 #include <boost/lexical_cast.hpp>
-#include <giskard_examples/ros_utils.hpp> // TODO: remove this, after watchdogs are out
 #include <giskard_examples/utils.hpp>
-#include <giskard_examples/watchdog.hpp>
 
 #include <giskard_examples/command_utils.hpp>
 #include <giskard_examples/conversions.hpp>
@@ -200,8 +198,6 @@ namespace giskard_examples
         if (state_ == WholeBodyControllerState::constructed)
         {
           parameters_ = params;
-//          init_parameters();
-          watchdog_.setPeriod(ros::Duration(readParam<double>(nh_, "watchdog_period")));
           init_controller_contexts();
   
           feedback_pub_ = nh_.advertise<giskard_msgs::ControllerFeedback>("feedback", 1, true);
@@ -219,10 +215,7 @@ namespace giskard_examples
         if (state_ == WholeBodyControllerState::started)
           process_first_joint_state(*msg);
 
-        if (watchdog_.barking(msg->header.stamp))
-          process_watchdog(msg->header);
-        else
-          process_regular_joint_state(*msg);
+        process_regular_joint_state(*msg);
 
         last_joint_state_ = *msg;
       }
@@ -232,11 +225,7 @@ namespace giskard_examples
         size_t new_command_hash = 
           giskard_examples::calculateHash<giskard_msgs::WholeBodyCommand>(*msg);
       
-        if(get_current_context().get_feedback().current_command_hash == new_command_hash)
-        {
-          watchdog_.kick(ros::Time::now());
-        }
-        else
+        if(get_current_context().get_feedback().current_command_hash != new_command_hash)
           process_new_command(*msg);
       }
 
@@ -323,7 +312,6 @@ namespace giskard_examples
           init_and_start_yaml_controller(msg);
         else
           get_current_context().set_command(new_command);
-        watchdog_.kick(ros::Time::now());
       }
 
       void WholeBodyController::init_and_start_yaml_controller(const giskard_msgs::WholeBodyCommand& msg)
@@ -393,25 +381,6 @@ namespace giskard_examples
         }
         else
           throw std::runtime_error("Update of controller '" + current_controller_ + "' failed.");
-      }
-
-      void WholeBodyController::process_watchdog(const std_msgs::Header& header)
-      {
-        giskard_msgs::ControllerFeedback feedback;
-        giskard_msgs::SemanticFloat64Array command;
-        for (size_t i=0; i<parameters_.joint_names.size(); ++i)
-        {
-          giskard_msgs::SemanticFloat64 msg;
-          msg.value = 0.0;
-          msg.semantics = parameters_.joint_names[i];
-          feedback.commands.push_back(msg);
-        }
-        feedback.header = header;
-        feedback.watchdog_active = true;
-        feedback_pub_.publish(feedback);
-
-        command.data = feedback.commands;
-        velocity_pub_.publish(command);
       }
 
       KDL::Frame WholeBodyController::eval_fk(const std::string& fk_name, 

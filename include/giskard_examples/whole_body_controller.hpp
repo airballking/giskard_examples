@@ -29,8 +29,6 @@
 #include <giskard_msgs/WholeBodyCommand.h>
 #include <giskard_msgs/ControllerFeedback.h>
 #include <giskard_msgs/SemanticFloat64Array.h>
-// TODO: get rid of watchdog because people hate it
-#include <giskard_examples/watchdog.hpp>
 
 namespace giskard_examples
 {
@@ -96,7 +94,6 @@ namespace giskard_examples
       ros::Subscriber goal_sub_, joint_state_sub_;
 
       std::map< std::string, ControllerContext > contexts_;
-      Watchdog<ros::Time, ros::Duration> watchdog_;
       std::string current_controller_;
       WholeBodyControllerParams parameters_;
       WholeBodyControllerState state_;
@@ -123,8 +120,6 @@ namespace giskard_examples
       void process_first_joint_state(const sensor_msgs::JointState& msg);
 
       void process_regular_joint_state(const sensor_msgs::JointState& msg);
-
-      void process_watchdog(const std_msgs::Header& header);
 
       KDL::Frame eval_fk(const std::string& fk_name, const sensor_msgs::JointState& msg);
   };
