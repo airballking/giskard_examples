@@ -36,6 +36,7 @@ include_directories(
   ${YAML_CPP_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME} 
+  src/${PROJECT_NAME}/motion_projector.cpp
   src/${PROJECT_NAME}/whole_body_controller.cpp)
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES} yaml-cpp)
