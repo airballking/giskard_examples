@@ -113,6 +113,10 @@ namespace giskard_examples
             throw std::runtime_error("Got unknown type of whole-body controller.");
         }
 
+        // TODO: instead of feeding command values into update, 
+        // turn goals into const expressions in QPController Context,
+        // and those const expressions with every new command
+
         if (command.type == giskard_msgs::WholeBodyCommand::STANDARD_CONTROLLER)
         {
           switch (command.left_ee.type)
@@ -156,19 +160,39 @@ namespace giskard_examples
         return feedback_;
       }
 
-      const giskard_msgs::SemanticFloat64Array& ControllerContext::get_vel_command() const
+      const giskard_msgs::SemanticFloat64Array& ControllerContext::get_vel_command_msg() const
       {
         return vel_command_;
+      }
+
+      const Eigen::VectorXd& ControllerContext::get_vel_command() const
+      {
+        return get_controller().get_command();
+      }
+
+      const Eigen::VectorXd& ControllerContext::get_state() const
+      {
+        return state_;
       }
 
       bool ControllerContext::update(const sensor_msgs::JointState& msg, int nWSR)
       {
         set_joint_state(msg);
-      
+        return update(msg.header, nWSR);
+      }
+
+      bool ControllerContext::update(const Eigen::VectorXd& state, const std_msgs::Header& header,  int nWSR)
+      {
+        set_joint_state(state);
+        return update(header, nWSR);
+      }
+
+      bool ControllerContext::update(const std_msgs::Header& header, int nWSR)
+      {
         if (controller_.update(state_, nWSR))
         {
           // fill feedback
-          feedback_.header = msg.header;
+          feedback_.header = header;
           for (size_t i=0; i<feedback_.commands.size(); ++i)
             feedback_.commands[i].value = controller_.get_command()[i];
           for (size_t i=0; i<feedback_.slacks.size(); ++i)
@@ -217,6 +241,14 @@ namespace giskard_examples
               state_[i] = msg.position[j];
       }
 
+      void ControllerContext::set_joint_state(const Eigen::VectorXd& state)
+      {
+        if (state_.rows() != state.rows())
+          throw std::runtime_error("Could not set joint state. Number of rows did not match.");
+
+        state_ = state;
+      }
+
       WholeBodyController::WholeBodyController() :
         state_(WholeBodyControllerState::constructed) {}
       WholeBodyController::~WholeBodyController() {}
@@ -244,9 +276,9 @@ namespace giskard_examples
         return get_current_context().get_feedback();
       }
 
-      const giskard_msgs::SemanticFloat64Array& WholeBodyController::vel_command() const
+      const giskard_msgs::SemanticFloat64Array& WholeBodyController::vel_command_msg() const
       {
-        return get_current_context().get_vel_command();
+        return get_current_context().get_vel_command_msg();
       }
 
       // INTERNAL HELPER FUNCTIONS

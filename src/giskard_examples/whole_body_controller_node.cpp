@@ -53,7 +53,7 @@ namespace giskard_examples
         }
 
         wbc_.update(*msg);
-        velocity_pub_.publish(wbc_.vel_command());
+        velocity_pub_.publish(wbc_.vel_command_msg());
         feedback_pub_.publish(wbc_.feedback());
       }
 

@@ -55,14 +55,20 @@ namespace giskard_examples
       giskard_msgs::ControllerFeedback feedback_;
       giskard_msgs::SemanticFloat64Array vel_command_;
 
+      bool update(const std_msgs::Header& header, int nWSR);
+
     public:
       void set_controller(const giskard::QPController& controller);
 
       void set_joint_state(const sensor_msgs::JointState& msg);
 
+      void set_joint_state(const Eigen::VectorXd& state);
+
       void set_command(const giskard_msgs::WholeBodyCommand& command);
 
       bool update(const sensor_msgs::JointState& msg, int nWSR);
+
+      bool update(const Eigen::VectorXd& state, const std_msgs::Header& header, int nWSR);
 
       void start_controller(const giskard_msgs::WholeBodyCommand& command,
           const WholeBodyControllerParams& params,
@@ -75,7 +81,11 @@ namespace giskard_examples
 
       const giskard_msgs::ControllerFeedback& get_feedback() const;
 
-      const giskard_msgs::SemanticFloat64Array& get_vel_command() const;
+      const giskard_msgs::SemanticFloat64Array& get_vel_command_msg() const;
+
+      const Eigen::VectorXd& get_vel_command() const;
+
+      const Eigen::VectorXd& get_state() const;
   };
 
   enum class WholeBodyControllerState { constructed, started, running };
@@ -99,7 +109,7 @@ namespace giskard_examples
 
       const giskard_msgs::ControllerFeedback& feedback() const;
 
-      const giskard_msgs::SemanticFloat64Array& vel_command() const;
+      const giskard_msgs::SemanticFloat64Array& vel_command_msg() const;
 
     private:
       std::map< std::string, ControllerContext > contexts_;
