@@ -28,12 +28,42 @@
 #include <boost/lexical_cast.hpp>
 #include <giskard_examples/utils.hpp>
 
+#include <giskard_examples/ros_utils.hpp>
 #include <giskard_examples/command_utils.hpp>
 #include <giskard_examples/conversions.hpp>
 #include <giskard_examples/whole_body_controller.hpp>
 
 namespace giskard_examples
 {
+  void WholeBodyControllerParams::read_from_server(const ros::NodeHandle& nh)
+  {
+    nWSR = readParam<int>(nh, "nWSR");
+    // TODO: extract joint_names from controller description
+    joint_names = readParam< std::vector<std::string> >(nh, "joint_names");
+    // TODO: harmonize with bodypart notation from other nodes?
+    l_arm_names = readParam< std::vector<std::string> >(nh, "l_arm_names");
+    r_arm_names = readParam< std::vector<std::string> >(nh, "r_arm_names");
+    frame_id = readParam< std::string >(nh, "frame_id");
+    l_fk_name = readParam< std::string >(nh, "l_fk_name");
+    r_fk_name = readParam< std::string >(nh, "r_fk_name");
+    controller_types = {"cart_cart", "joint_cart", "cart_joint", "joint_joint", "yaml"};
+
+    controller_descriptions = 
+      readParam< std::map<std::string, std::string> >(nh, "controller_descriptions");
+    for (std::set<std::string>::const_iterator it=controller_types.begin();
+         it!=controller_types.end(); ++it)
+      if(it->compare("yaml") != 0 && 
+          controller_descriptions.find(*it) == controller_descriptions.end())
+        throw std::runtime_error("Could not find controller description for '" + *it + "'.");
+  }
+
+  WholeBodyControllerParams read_params(const ros::NodeHandle& nh)
+  {
+    WholeBodyControllerParams result;
+    result.read_from_server(nh);
+    return result;
+  }
+
       void ControllerContext::set_controller(const giskard::QPController& controller)
       {
         controller_ = controller;

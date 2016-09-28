@@ -35,12 +35,17 @@ namespace giskard_examples
   class WholeBodyControllerParams
   {
     public:
+      void read_from_server(const ros::NodeHandle& nh);
+
       std::string frame_id, l_fk_name, r_fk_name;
       std::vector< std::string > joint_names, l_arm_names, r_arm_names;
       std::map<std::string, std::string> controller_descriptions;
       std::set< std::string > controller_types;
       int nWSR;
   };
+
+  WholeBodyControllerParams read_params(const ros::NodeHandle& nh);
+
 
   class ControllerContext
   {
