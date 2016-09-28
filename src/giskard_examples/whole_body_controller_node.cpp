@@ -22,6 +22,54 @@
 
 #include <giskard_examples/whole_body_controller.hpp>
 
+namespace giskard_examples
+{
+  class WholeBodyControllerNode
+  {
+    public:
+      WholeBodyControllerNode(const ros::NodeHandle& nh) : 
+        nh_(nh) {}
+      ~WholeBodyControllerNode() {}
+
+      void start()
+      {
+        wbc_.init(read_params(nh_));
+
+        feedback_pub_ = nh_.advertise<giskard_msgs::ControllerFeedback>("feedback", 1, true);
+        velocity_pub_ = nh_.advertise<giskard_msgs::SemanticFloat64Array>("velocity_cmd", 1);
+        joint_state_sub_ = nh_.subscribe("joint_states", 1, &WholeBodyControllerNode::joint_state_callback, this,
+          ros::TransportHints().tcpNoDelay());
+
+      }
+
+    private:
+
+      void joint_state_callback(const sensor_msgs::JointState::ConstPtr& msg)
+      {
+        if (wbc_.state() == WholeBodyControllerState::started)
+        {
+          wbc_.start(*msg);
+          goal_sub_ = nh_.subscribe("goal", 1, &WholeBodyControllerNode::command_callback, this);
+        }
+
+        wbc_.update(*msg);
+        velocity_pub_.publish(wbc_.vel_command());
+        feedback_pub_.publish(wbc_.feedback());
+      }
+
+      void command_callback(const giskard_msgs::WholeBodyCommand::ConstPtr& msg)
+      {
+        wbc_.set_command(*msg);
+      }
+
+      ros::NodeHandle nh_;
+      ros::Publisher velocity_pub_, feedback_pub_;
+      ros::Subscriber goal_sub_, joint_state_sub_;
+
+      WholeBodyController wbc_;
+  };
+}
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "whole_body_controller");
@@ -29,10 +77,10 @@ int main(int argc, char **argv)
 
   using namespace giskard_examples;
 
-  WholeBodyController wbc(nh);
+  WholeBodyControllerNode controller(nh);
   try
   {
-    wbc.init(read_params(nh));
+    controller.start();
     ros::spin();
   }
   catch (const std::exception& e)

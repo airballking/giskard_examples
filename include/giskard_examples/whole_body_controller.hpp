@@ -83,7 +83,7 @@ namespace giskard_examples
   class WholeBodyController
   {
     public:
-      WholeBodyController(const ros::NodeHandle& nh); 
+      WholeBodyController();
       ~WholeBodyController();
 
       // TODO: think about joining init & start
@@ -95,19 +95,13 @@ namespace giskard_examples
 
       void set_command(const giskard_msgs::WholeBodyCommand& msg);
 
-      // TODO: get rid of these callbacks
-      void joint_state_callback(const sensor_msgs::JointState::ConstPtr& msg);
-
-      void command_callback(const giskard_msgs::WholeBodyCommand::ConstPtr& msg);
-
       const WholeBodyControllerState& state() const;
 
-    private:
-      // TODO: separate into two classes to allow unit testing
-      ros::NodeHandle nh_;
-      ros::Publisher velocity_pub_, feedback_pub_;
-      ros::Subscriber goal_sub_, joint_state_sub_;
+      const giskard_msgs::ControllerFeedback& feedback() const;
 
+      const giskard_msgs::SemanticFloat64Array& vel_command() const;
+
+    private:
       std::map< std::string, ControllerContext > contexts_;
       std::string current_controller_;
       WholeBodyControllerParams parameters_;
@@ -118,14 +112,15 @@ namespace giskard_examples
       // TODO: check whether these could move somewhere else
 
       ControllerContext& get_current_context();
+      const ControllerContext& get_current_context() const;
 
       ControllerContext& get_context(const std::string& controller);
+      const ControllerContext& get_context(const std::string& controller) const;
 
       giskard_msgs::WholeBodyCommand complete_command(const giskard_msgs::WholeBodyCommand& new_command,
           const giskard_msgs::WholeBodyCommand& current_command);
 
       std::string infer_controller(const giskard_msgs::WholeBodyCommand& msg);
-
 
       void init_and_start_yaml_controller(const giskard_msgs::WholeBodyCommand& msg);
 
